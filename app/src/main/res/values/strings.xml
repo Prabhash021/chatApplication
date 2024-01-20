@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">chatApplication</string>
+    <string name="client_id">835813292612-7c5pdp5hfo3sssh5rrsv0ll4p2e7ruo5.apps.googleusercontent.com</string>
+    <string name="name">Name</string>
+    <string name="email">Email</string>
+    <string name="bio">Bio</string>
+    <string name="male">Male</string>
+    <string name="gender">Gender</string>
+    <string name="female">Female</string>
+    <string name="dob">DOB</string>
+    <string name="save">Save</string>
+</resources>
