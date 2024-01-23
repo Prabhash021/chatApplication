@@ -1,6 +1,11 @@
 package com.example.chatapplication;
 
+import static android.content.Context.MODE_PRIVATE;
+
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -10,10 +15,12 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 
 public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.ViewHolder> {
@@ -52,6 +59,19 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Vi
 
         holder.userProfileName.setText(arrayList.get(position).getName());
         holder.userEmail.setText(arrayList.get(position).getEmail());
+
+        String user = arrayList.get(position).getName();
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SharedPreferences sharedPreferences = context.getSharedPreferences("Preference", MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putString("chatUser", user);
+                editor.apply();
+                Intent intent = new Intent(v.getContext(), ChatScreen.class);
+                v.getContext().startActivity(intent);
+            }
+        });
     }
 
     @Override
