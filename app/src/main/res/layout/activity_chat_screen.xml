@@ -31,12 +31,14 @@
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:hint="@string/enter_text"/>
+            android:hint="@string/enter_text"
+            android:id="@+id/chatMsg"/>
 
         <Button
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/send"/>
+            android:text="@string/send"
+            android:id="@+id/sendMsg"/>
 
     </LinearLayout>
 
