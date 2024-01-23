@@ -1,6 +1,8 @@
 package com.example.chatapplication;
 
 import android.content.Context;
+import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +20,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Vi
     Context context;
     ArrayList<UserDataModel> arrayList;
 
-    HomeScreenAdapter(Context context, ArrayList<UserDataModel> arrayList){
+    HomeScreenAdapter(@NonNull Context context,@NonNull ArrayList<UserDataModel> arrayList){
         this.context = context;
         this.arrayList = arrayList;
     }
@@ -32,9 +34,21 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Vi
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        Glide.with(context)
-                .load(arrayList.get(position).getProfileUri())
-                .into(holder.profileIV);
+
+        Uri uri = arrayList.get(position).getProfileUri();
+
+        Log.e("Adapter", "Uri link >" + uri);
+
+        if(uri != null){
+            Glide.with(context)
+                    .load(uri)
+                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .into(holder.profileIV);
+        } else {
+            Glide.with(context)
+                    .load(R.drawable.ic_launcher_foreground)
+                    .into(holder.profileIV);
+        }
 
         holder.userProfileName.setText(arrayList.get(position).getName());
         holder.userEmail.setText(arrayList.get(position).getEmail());
@@ -52,7 +66,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Vi
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            profileIV = itemView.findViewById(R.id.profileImgView);
+            profileIV = itemView.findViewById(R.id.userProfileImgPreview);
             userProfileName = itemView.findViewById(R.id.UserNameTV);
             userEmail = itemView.findViewById(R.id.UserEmailTV);
 

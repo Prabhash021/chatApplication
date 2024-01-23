@@ -1,57 +1,88 @@
 package com.example.chatapplication;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.UserInfo;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
+import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Objects;
 
 public class HomeActivity extends AppCompatActivity {
     public final String TAG = "HomeActivity";
+    TextView profile;
+    ProgressBar loading;
     HomeScreenAdapter adapter;
     RecyclerView recyclerView;
-    FirebaseAuth auth;
+    FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
 
-
-
+        profile = findViewById(R.id.profileView);
+        loading = findViewById(R.id.loadingHome);
         recyclerView = findViewById(R.id.userListRV);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-
-        auth = FirebaseAuth.getInstance();
-
         ArrayList<UserDataModel> arrayList = new ArrayList<>();
 
-        Log.e(TAG, "Provider -> "+ auth.getCurrentUser().getProviderData());
+        db = FirebaseFirestore.getInstance();
+        loading.setVisibility(View.VISIBLE);
 
-        for(UserInfo profile : Objects.requireNonNull(auth.getCurrentUser()).getProviderData()){
-            Log.e(TAG, "Get users name -> "+Objects.requireNonNull(profile.getDisplayName()));
-            Log.e(TAG, "Get users email -> "+Objects.requireNonNull(profile.getEmail()));
+        db.collection("UserData").get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                if(task.isSuccessful()){
+                    loading.setVisibility(View.GONE);
+                    for(QueryDocumentSnapshot document : task.getResult()){
+                        String userName = document.getString("name");
+                        String userMail = document.getString("email");
+                        Uri profileLink = Uri.parse(document.getString("profileUri"));
 
-            String userName = profile.getDisplayName();
-            String UserMail = profile.getEmail();
-            Uri imageLink = profile.getPhotoUrl();
+                        Log.e(TAG, "Get users name -> "+userName);
+                        Log.e(TAG, "Get users email -> "+userMail);
 
-            arrayList.add(new UserDataModel(userName, UserMail, imageLink));
+                        arrayList.add(new UserDataModel(userName, userMail, profileLink));
+                    }
+                    adapter = new HomeScreenAdapter(HomeActivity.this, arrayList);
+                    recyclerView.setAdapter(adapter);
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(HomeActivity.this, "failed call", Toast.LENGTH_SHORT).show();
+            }
+        });
 
-        }
-        adapter = new HomeScreenAdapter(this, arrayList);
-        recyclerView.setAdapter(adapter);
-
+        profile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(HomeActivity.this, MyProfile.class);
+                startActivity(intent);
+            }
+        });
     }
 }

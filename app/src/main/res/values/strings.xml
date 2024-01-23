@@ -9,4 +9,6 @@
     <string name="female">Female</string>
     <string name="dob">DOB</string>
     <string name="save">Save</string>
+    <string name="my_profile">My Profile</string>
+    <string name="upload">Upload</string>
 </resources>

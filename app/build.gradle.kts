@@ -67,4 +67,7 @@ dependencies {
 
     // For firestore database
     implementation("com.google.firebase:firebase-firestore:24.10.1")
+
+    // For firebase storage
+    implementation("com.google.firebase:firebase-storage:20.3.0")
 }

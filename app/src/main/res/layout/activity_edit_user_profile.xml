@@ -9,62 +9,85 @@
     android:gravity="center"
     android:orientation="vertical"
     android:layout_marginRight="25dp"
-    android:layout_marginLeft="25dp">
+    android:layout_marginLeft="25dp"
+    android:padding="15dp">
 
     <ImageView
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:id="@+id/profileImgView"
-        android:src="@drawable/baseline_add_a_photo_24"/>
+        android:src="@drawable/baseline_add_a_photo_24"
+        android:layout_marginBottom="5dp"/>
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/uploadImg"
+        android:text="@string/upload"
+        android:textSize="11sp"/>
 
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/nameEditTxt"
-        android:hint="@string/name"/>
+        android:hint="@string/name"
+        android:layout_marginBottom="5dp"/>
 
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/emailEditTxt"
-        android:hint="@string/email"/>
+        android:hint="@string/email"
+        android:layout_marginBottom="5dp"/>
 
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/bioEditTxt"
-        android:hint="@string/bio"/>
+        android:hint="@string/bio"
+        android:layout_marginBottom="5dp"/>
 
     <RadioGroup
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:id="@+id/genderRadioGrup">
+        android:orientation="vertical"
+        android:gravity="start"
+        android:id="@+id/genderRadioGrup"
+        android:layout_marginBottom="5dp">
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:text="@string/gender"
             android:textSize="15sp"/>
 
-        <RadioButton
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/maleRadioBtn"
-            android:text="@string/male"/>
+            android:orientation="horizontal"
+            android:gravity="center">
 
-        <RadioButton
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/femaleRadioBtn"
-            android:text="@string/female"/>
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/maleRadioBtn"
+                android:text="@string/male"/>
+
+            <RadioButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/femaleRadioBtn"
+                android:text="@string/female"
+                android:layout_marginStart="10dp"/>
+
+        </LinearLayout>
+
     </RadioGroup>
 
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:id="@+id/dateEditTxt"
-        android:hint="@string/dob"/>
+        android:hint="@string/dob"
+        android:layout_marginBottom="5dp"/>
 
     <Button
         android:layout_width="wrap_content"
