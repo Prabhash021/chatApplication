@@ -44,7 +44,7 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Vi
 
         Uri uri = arrayList.get(position).getProfileUri();
 
-        Log.e("Adapter", "Uri link >" + uri);
+//        Log.e("Adapter", "Uri link >" + uri);
 
         if(uri != null){
             Glide.with(context)

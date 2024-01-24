@@ -61,8 +61,8 @@ public class HomeActivity extends AppCompatActivity {
                         String userMail = document.getString("email");
                         Uri profileLink = Uri.parse(document.getString("profileUri"));
 
-                        Log.e(TAG, "Get users name -> "+userName);
-                        Log.e(TAG, "Get users email -> "+userMail);
+//                        Log.e(TAG, "Get users name -> "+userName);
+//                        Log.e(TAG, "Get users email -> "+userMail);
 
                         arrayList.add(new UserDataModel(userName, userMail, profileLink));
                     }
