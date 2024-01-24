@@ -123,6 +123,9 @@ public class EditUserProfile extends AppCompatActivity {
             Toast.makeText(EditUserProfile.this, "Please provide all the details", Toast.LENGTH_SHORT).show();
         }
         else {
+            if(uProfileUri == null){
+                uProfileUri = Uri.parse("https://firebasestorage.googleapis.com/v0/b/chat-application-56b3a.appspot.com/o/images%2Fdummy-prod-1.jpg?alt=media&token=fb370645-9d97-463b-b3d1-0499afd4d1b2");
+            }
             UserDataModel userDataModel = new UserDataModel(uName, uEmail, uBio, uDob, uGender,uProfileUri);
 
             db.collection("UserData").document(uId).set(userDataModel).addOnSuccessListener(new OnSuccessListener<Void>() {
@@ -176,6 +179,7 @@ public class EditUserProfile extends AppCompatActivity {
                     if(document.exists()){
                         Log.e("Check Doc", "On success, Checking document > " + document.getData());
                         name.setText(document.getString("name"));
+                        email.setText(document.getString("email"));
                         bio.setText(document.getString("bio"));
                         String gender = document.getString("gender");
                         if(Objects.equals(gender, "Male")){

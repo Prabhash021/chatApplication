@@ -16,6 +16,12 @@
         android:textSize="25sp"
         android:id="@+id/chatUser"/>
 
+    <ProgressBar
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/loadingCS"
+        android:visibility="gone"/>
+
     <ListView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -38,7 +44,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="@string/send"
-            android:id="@+id/sendMsg"/>
+            android:id="@+id/sendMsg"
+            android:enabled="false"/>
 
     </LinearLayout>
 

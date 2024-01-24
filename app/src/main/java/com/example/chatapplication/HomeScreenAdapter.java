@@ -61,12 +61,14 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Vi
         holder.userEmail.setText(arrayList.get(position).getEmail());
 
         String user = arrayList.get(position).getName();
+        String id = arrayList.get(position).getEmail();
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 SharedPreferences sharedPreferences = context.getSharedPreferences("Preference", MODE_PRIVATE);
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 editor.putString("chatUser", user);
+                editor.putString("chatUserId", id);
                 editor.apply();
                 Intent intent = new Intent(v.getContext(), ChatScreen.class);
                 v.getContext().startActivity(intent);
