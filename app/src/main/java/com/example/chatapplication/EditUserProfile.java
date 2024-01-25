@@ -126,7 +126,7 @@ public class EditUserProfile extends AppCompatActivity {
             if(uProfileUri == null){
                 uProfileUri = Uri.parse("https://firebasestorage.googleapis.com/v0/b/chat-application-56b3a.appspot.com/o/images%2Fdummy-prod-1.jpg?alt=media&token=fb370645-9d97-463b-b3d1-0499afd4d1b2");
             }
-            UserDataModel userDataModel = new UserDataModel(uName, uEmail, uBio, uDob, uGender,uProfileUri);
+            UserDataModel userDataModel = new UserDataModel(uName, uEmail, uBio, uDob, uGender,uProfileUri, uId);
 
             db.collection("UserData").document(uId).set(userDataModel).addOnSuccessListener(new OnSuccessListener<Void>() {
                 @Override

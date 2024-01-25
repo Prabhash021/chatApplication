@@ -61,7 +61,8 @@ public class HomeScreenAdapter extends RecyclerView.Adapter<HomeScreenAdapter.Vi
         holder.userEmail.setText(arrayList.get(position).getEmail());
 
         String user = arrayList.get(position).getName();
-        String id = arrayList.get(position).getEmail();
+        String id = arrayList.get(position).getUserId();
+
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

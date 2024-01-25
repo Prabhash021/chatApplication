@@ -11,7 +11,7 @@
     <string name="save">Save</string>
     <string name="my_profile">My Profile</string>
     <string name="upload">Upload</string>
-    <string name="enter_text">Enter text................</string>
+    <string name="enter_text">Enter text</string>
     <string name="send">Send</string>
     <string name="refresh">Refresh</string>
 </resources>

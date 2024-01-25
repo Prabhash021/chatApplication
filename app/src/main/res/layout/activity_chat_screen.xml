@@ -22,29 +22,31 @@
         android:id="@+id/loadingCS"
         android:visibility="gone"/>
 
-    <ListView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="40dp"
-        android:id="@+id/chatLV"/>
-
-    <LinearLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center">
+        android:layout_height="775dp"
+        android:id="@+id/swipeRefresh">
 
-        <Button
+        <ListView
+            android:id="@+id/chatLV"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/refresh"
-            android:id="@+id/refreshBtn"/>
+            android:stackFromBottom="true"
+            android:transcriptMode="alwaysScroll"/>
+
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
         <EditText
-            android:layout_width="wrap_content"
+            android:layout_width="300dp"
             android:layout_height="wrap_content"
             android:hint="@string/enter_text"
             android:id="@+id/chatMsg"
+            android:layout_alignParentStart="true"
             android:layout_margin="8dp"/>
 
         <Button
@@ -52,8 +54,9 @@
             android:layout_height="wrap_content"
             android:text="@string/send"
             android:id="@+id/sendMsg"
+            android:layout_alignParentEnd="true"
             android:enabled="false"/>
 
-    </LinearLayout>
+    </RelativeLayout>
 
 </LinearLayout>

@@ -70,4 +70,7 @@ dependencies {
 
     // For firebase storage
     implementation("com.google.firebase:firebase-storage:20.3.0")
+
+    // For swipe-to-refresh
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01")
 }

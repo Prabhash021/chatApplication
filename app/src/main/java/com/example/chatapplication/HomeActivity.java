@@ -58,13 +58,14 @@ public class HomeActivity extends AppCompatActivity {
                     loading.setVisibility(View.GONE);
                     for(QueryDocumentSnapshot document : task.getResult()){
                         String userName = document.getString("name");
+                        String userId = document.getString("userId");
                         String userMail = document.getString("email");
                         Uri profileLink = Uri.parse(document.getString("profileUri"));
 
 //                        Log.e(TAG, "Get users name -> "+userName);
 //                        Log.e(TAG, "Get users email -> "+userMail);
 
-                        arrayList.add(new UserDataModel(userName, userMail, profileLink));
+                        arrayList.add(new UserDataModel(userName, userId, profileLink, userMail));
                     }
                     adapter = new HomeScreenAdapter(HomeActivity.this, arrayList);
                     recyclerView.setAdapter(adapter);
