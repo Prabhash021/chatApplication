@@ -25,13 +25,18 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
+import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public class ChatScreen extends AppCompatActivity {
@@ -47,6 +52,7 @@ public class ChatScreen extends AppCompatActivity {
     String chatId;
     FirebaseAuth auth;
     FirebaseFirestore db;
+    DocumentReference documentReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,6 +81,9 @@ public class ChatScreen extends AppCompatActivity {
         String chatUserId = sharedPref.getString("chatUserId", null);
         /*Log.e("ChatId", "chatUserId > " + chatUserId);*/
 
+        @SuppressLint("SimpleDateFormat")
+        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
+
         //name of another chat user
         chatUserNameTV.setText(chatUserName);
 
@@ -87,13 +96,10 @@ public class ChatScreen extends AppCompatActivity {
         chatId = checkChatId(chatId1, chatId2);
         Log.e("chatId", "current Chat Id: "+ chatId);
 
-        @SuppressLint("SimpleDateFormat")
-        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
-
         //reference for the chatId document section
-        DocumentReference documentReference = db.collection("ChatData").document(chatId);
+        documentReference = db.collection("ChatData").document(chatId);
         //changes happens in document. addSnapshotListener, starts listening to the document referenced by above DocumentReference.
-        documentReference.collection(chatId).addSnapshotListener(new EventListener<QuerySnapshot>() {
+        /*documentReference.collection(chatId).addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
                 if( value != null && !value.isEmpty()){
@@ -103,7 +109,22 @@ public class ChatScreen extends AppCompatActivity {
                     String msg = value.getDocumentChanges().get(i).getDocument().getString("msg");
                     chatList.add(msg);
                     adapter.notifyDataSetChanged();
-                   /* getChatData(chatId);*/
+                   *//* getChatData(chatId);*//*
+                }
+            }
+        });*/
+
+        documentReference.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
+                if(value != null && value.exists()){
+                    ArrayList<HashMap<String, String>> users = (ArrayList<HashMap<String, String>>) value.get("Message");
+                    for(int i = 0; i< Objects.requireNonNull(users).size(); i++){
+                        HashMap<String, String> chat = users.get(i);
+                        String msg = chat.get("msg");
+                        chatList.add(msg);
+                        adapter.notifyDataSetChanged();
+                    }
                 }
             }
         });
@@ -128,7 +149,7 @@ public class ChatScreen extends AppCompatActivity {
                 if(!newMsg.isEmpty()){
                     msgModel model = new msgModel(auth.getCurrentUser().getDisplayName(), newMsg, timeStamp);
                     //store to the fireStore db,
-                    db.collection("ChatData").document(chatId).collection(chatId).document(timeStamp).set(model)
+                    /*db.collection("ChatData").document(chatId).collection(chatId).document(timeStamp).set(model)
                             .addOnSuccessListener(new OnSuccessListener<Void>() {
                         @Override
                         public void onSuccess(Void unused) {
@@ -141,8 +162,57 @@ public class ChatScreen extends AppCompatActivity {
                         public void onFailure(@NonNull Exception e) {
                             Log.e("ChatData", "Chat data failed to add > " + e.getMessage());
                         }
+                    });*/
+
+                    documentReference.update("Message", FieldValue.arrayUnion(model)).addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void unused) {
+                            chatList.add(newMsg);
+                            msg.setText("");
+                            Toast.makeText(ChatScreen.this, "Data added to db", Toast.LENGTH_SHORT).show();
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception e) {
+                            checkDocument(model);
+                            Toast.makeText(ChatScreen.this, "First msg", Toast.LENGTH_SHORT).show();
+                        }
                     });
+
                 }
+            }
+        });
+    }
+
+    private void checkDocument(msgModel model) {
+        documentReference = db.collection("ChatData").document("newDocument");
+        documentReference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                if(task.isSuccessful()){
+                    DocumentSnapshot document = task.getResult();
+                    if(!document.exists()){
+
+                        Map<String, Object> newMsg = new HashMap<>();
+                        newMsg.put("Message", Collections.singletonList(model));
+                        documentReference.set(newMsg).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                Toast.makeText(ChatScreen.this, "Data Added", Toast.LENGTH_SHORT).show();
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(ChatScreen.this, "Failed to connect", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    }
+                }
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(ChatScreen.this, "Failed to check", Toast.LENGTH_SHORT).show();
             }
         });
     }
