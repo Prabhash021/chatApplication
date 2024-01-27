@@ -24,6 +24,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
@@ -117,9 +118,14 @@ public class ChatScreen extends AppCompatActivity {
         documentReference.addSnapshotListener(new EventListener<DocumentSnapshot>() {
             @Override
             public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
-                if(value != null && value.exists()){
+                assert value != null;
+                if(value.exists()){
+
                     ArrayList<HashMap<String, String>> users = (ArrayList<HashMap<String, String>>) value.get("Message");
-                    for(int i = 0; i< Objects.requireNonNull(users).size(); i++){
+                    assert users != null;
+                    Log.e("ChatData", "Chat > "+ users.size());
+
+                    for(int i = 0 ; i<users.size(); i++){
                         HashMap<String, String> chat = users.get(i);
                         String msg = chat.get("msg");
                         chatList.add(msg);
@@ -174,7 +180,7 @@ public class ChatScreen extends AppCompatActivity {
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception e) {
-                            checkDocument(model);
+                            checkDocument(model, documentReference);
                             Toast.makeText(ChatScreen.this, "First msg", Toast.LENGTH_SHORT).show();
                         }
                     });
@@ -184,28 +190,14 @@ public class ChatScreen extends AppCompatActivity {
         });
     }
 
-    private void checkDocument(msgModel model) {
-        documentReference = db.collection("ChatData").document("newDocument");
+    private void checkDocument(msgModel model, DocumentReference documentReference) {
         documentReference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                 if(task.isSuccessful()){
                     DocumentSnapshot document = task.getResult();
                     if(!document.exists()){
-
-                        Map<String, Object> newMsg = new HashMap<>();
-                        newMsg.put("Message", Collections.singletonList(model));
-                        documentReference.set(newMsg).addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                Toast.makeText(ChatScreen.this, "Data Added", Toast.LENGTH_SHORT).show();
-                            }
-                        }).addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                Toast.makeText(ChatScreen.this, "Failed to connect", Toast.LENGTH_SHORT).show();
-                            }
-                        });
+                        onFirstMsg(model, documentReference);
                     }
                 }
             }
@@ -217,15 +209,51 @@ public class ChatScreen extends AppCompatActivity {
         });
     }
 
+    private void onFirstMsg(msgModel model, DocumentReference documentReference) {
+        Map<String, Object> newMsg = new HashMap<>();
+        newMsg.put("Message", Collections.singletonList(model));
+        documentReference.set(newMsg).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                msg.setText("");
+                Toast.makeText(ChatScreen.this, "Data Added", Toast.LENGTH_SHORT).show();
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(ChatScreen.this, "Failed to connect", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
     //checks is there any chatId already existed or not if not then chatId2 will be the chatId
     private String checkChatId(String chatId1, String chatId2){
         loading.setVisibility(View.VISIBLE);
         DocumentReference documentReference = db.collection("ChatData").document(chatId1);
-        documentReference.collection(chatId1).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+        /*documentReference.collection(chatId1).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
             @Override
             public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
                 loading.setVisibility(View.GONE);
                 if(!queryDocumentSnapshots.isEmpty()){
+                    chatId = chatId1;
+                }
+                chatList.clear();
+                getChatData(chatId);
+                send.setEnabled(true);
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                loading.setVisibility(View.GONE);
+                Toast.makeText(ChatScreen.this, "Unable to connect", Toast.LENGTH_SHORT).show();
+            }
+        });*/
+
+        documentReference.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
+            @Override
+            public void onSuccess(DocumentSnapshot documentSnapshot) {
+                loading.setVisibility(View.GONE);
+                if(!documentSnapshot.exists()){
                     chatId = chatId1;
                 }
                 chatList.clear();
@@ -248,14 +276,14 @@ public class ChatScreen extends AppCompatActivity {
     //starts getting the entire chat data with chatId
     private void getChatData(String chatId) {
         DocumentReference documentReference = db.collection("ChatData").document(chatId);
-        documentReference.collection(chatId).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+        /*documentReference.collection(chatId).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
             @Override
             public void onComplete(@NonNull Task<QuerySnapshot> task) {
                 if(task.isSuccessful() && !task.getResult().isEmpty()){
                     for(QueryDocumentSnapshot chat: task.getResult()){
                         String msg = chat.getString("msg");
                         String userName = chat.getString("userId");
-                        /*Log.e("getChat", "OnComplete of getting chat > "+ msg);*/
+                        *//*Log.e("getChat", "OnComplete of getting chat > "+ msg);*//*
                         chatList.add(userName + "\n" + msg +"\n\n");
                         adapter.notifyDataSetChanged();
                     }
@@ -265,6 +293,26 @@ public class ChatScreen extends AppCompatActivity {
             @Override
             public void onFailure(@NonNull Exception e) {
                 Toast.makeText(ChatScreen.this, "Unable to get Data", Toast.LENGTH_SHORT).show();
+            }
+        });*/
+        documentReference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+            @Override
+            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                DocumentSnapshot document = task.getResult();
+                if(document.exists()){
+
+                    ArrayList<HashMap<String, String>> users = (ArrayList<HashMap<String, String>>) document.get("Message");
+                    assert users != null;
+                    Log.e("ChatData", "Chat > "+ users.size());
+
+                    for(int i = 0 ; i<users.size(); i++){
+                        HashMap<String, String> chat = users.get(i);
+                        String msg = chat.get("msg");
+                        String userName = chat.get("userId");
+                        chatList.add(userName + "\n" + msg +"\n\n");
+                        adapter.notifyDataSetChanged();
+                    }
+                }
             }
         });
     }
