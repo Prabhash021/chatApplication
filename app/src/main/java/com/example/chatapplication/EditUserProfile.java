@@ -146,6 +146,7 @@ public class EditUserProfile extends AppCompatActivity {
 
     private void uploadImg(Uri imageUri) {
         if(imageUri!=null){
+            loading.setVisibility(View.VISIBLE);
             StorageReference ref = storageReference.child("images/" + Objects.requireNonNull(auth.getCurrentUser()).getEmail());
             ref.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
@@ -158,6 +159,7 @@ public class EditUserProfile extends AppCompatActivity {
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception e) {
+                    loading.setVisibility(View.GONE);
                     Toast.makeText(EditUserProfile.this, "Failed"+e.getMessage(), Toast.LENGTH_SHORT).show();
                     Log.e("FailedImage", "error image upload > "+ e.getMessage());
                 }
@@ -172,6 +174,7 @@ public class EditUserProfile extends AppCompatActivity {
         ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
             @Override
             public void onSuccess(Uri uri) {
+                loading.setVisibility(View.GONE);
                 imageUri = uri;
             }
         }).addOnFailureListener(new OnFailureListener() {

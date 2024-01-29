@@ -2,4 +2,6 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="chatButtonPrimaryColour">#FF5722</color>
+    <color name="chatButtonPrimaryColourDark">#FF0EE1CD</color>
 </resources>

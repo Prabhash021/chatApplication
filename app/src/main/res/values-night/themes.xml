@@ -4,4 +4,14 @@
         <!-- Customize your dark theme here. -->
         <!-- <item name="colorPrimary">@color/my_dark_primary</item> -->
     </style>
+
+    <style name="Theme.ChatApplication." parent="Base.Theme.ChatApplication"/>
+
+    <style name="ButtonColor" parent="Theme.AppCompat.DayNight">
+        <item name="colorPrimary">@color/chatButtonPrimaryColour</item>
+    </style>
+
+    <style name="TextColour" parent="Theme.AppCompat.DayNight">
+        <item name="colorPrimary">@color/white</item>
+    </style>
 </resources>

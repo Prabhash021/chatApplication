@@ -9,6 +9,7 @@
         android:layout_height="wrap_content"
         android:id="@+id/chatTxt"
         android:textStyle="bold"
+        android:theme="@style/TextColour"
         android:layout_margin="5sp"
         android:layout_marginBottom="5dp"
         android:layout_marginEnd="20dp"

@@ -55,6 +55,7 @@
             android:text="@string/send"
             android:id="@+id/sendMsg"
             android:layout_alignParentEnd="true"
+            android:theme="@style/ButtonColor"
             android:enabled="false"/>
 
     </RelativeLayout>
