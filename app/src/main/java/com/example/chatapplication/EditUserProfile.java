@@ -27,13 +27,10 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.storage.FileDownloadTask;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Objects;
 
 public class EditUserProfile extends AppCompatActivity {
@@ -68,6 +65,7 @@ public class EditUserProfile extends AppCompatActivity {
         loading = findViewById(R.id.loadingPB);
 
         email.setEnabled(false);
+        uploadImg.setEnabled(false);
 
         db = FirebaseFirestore.getInstance();
         storage = FirebaseStorage.getInstance();
@@ -105,6 +103,8 @@ public class EditUserProfile extends AppCompatActivity {
             pickMedia.launch(new PickVisualMediaRequest.Builder()
                     .setMediaType(ActivityResultContracts.PickVisualMedia.ImageOnly.INSTANCE)
                     .build());
+
+            uploadImg.setEnabled(true);
         });
 
         uploadImg.setOnClickListener(v -> uploadImg(imageUri));
@@ -117,7 +117,7 @@ public class EditUserProfile extends AppCompatActivity {
         String uDob = DOB.getText().toString();
         String uGender = gender;
         Uri uProfileUri = imageUri;
-        String uId = auth.getCurrentUser().getUid();
+        String uId = Objects.requireNonNull(auth.getCurrentUser()).getUid();
 
         if(uName.trim().isEmpty() || uEmail.trim().isEmpty() || uBio.trim().isEmpty() || uDob.trim().isEmpty() || uGender.trim().isEmpty()){
             Toast.makeText(EditUserProfile.this, "Please provide all the details", Toast.LENGTH_SHORT).show();
@@ -146,13 +146,14 @@ public class EditUserProfile extends AppCompatActivity {
 
     private void uploadImg(Uri imageUri) {
         if(imageUri!=null){
-            StorageReference ref = storageReference.child("images/" + Objects.requireNonNull(auth.getCurrentUser()).getUid());
+            StorageReference ref = storageReference.child("images/" + Objects.requireNonNull(auth.getCurrentUser()).getEmail());
             ref.putFile(imageUri).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                 @Override
                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                     Toast.makeText(EditUserProfile.this, "Image Saved", Toast.LENGTH_SHORT).show();
                     String imageUrl = taskSnapshot.getStorage().getPath();
                     Log.e("StoragePath", "storagrUrl > "+ imageUrl);
+                    getImageUrl(ref);
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
@@ -165,6 +166,20 @@ public class EditUserProfile extends AppCompatActivity {
         else {
             Toast.makeText(this, "Select new image", Toast.LENGTH_SHORT).show();
         }
+    }
+
+    private void getImageUrl(StorageReference ref) {
+        ref.getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                imageUri = uri;
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                Toast.makeText(EditUserProfile.this, "Failed to upload image", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
     private void checkData(){

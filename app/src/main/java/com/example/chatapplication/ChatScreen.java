@@ -7,11 +7,12 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.annotation.SuppressLint;
 import android.content.SharedPreferences;
+import android.database.DataSetObserver;
 import android.icu.text.SimpleDateFormat;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
-import android.widget.ArrayAdapter;
+import android.widget.AbsListView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
@@ -24,15 +25,12 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
-import com.google.firebase.firestore.QueryDocumentSnapshot;
-import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,9 +46,10 @@ public class ChatScreen extends AppCompatActivity {
     Button send;
     ProgressBar loading;
     SwipeRefreshLayout swipeRefreshLayout;
-    ArrayList<String> chatList;
-    ArrayAdapter<String> adapter;
-    String chatId;
+    /*ArrayList<String> chatList;
+    ArrayAdapter<String> adapter;*/
+    ChatAdapter chatAdapter;
+    String chatId, senderId, senderName;
     FirebaseAuth auth;
     FirebaseFirestore db;
     DocumentReference documentReference;
@@ -67,138 +66,110 @@ public class ChatScreen extends AppCompatActivity {
         loading = findViewById(R.id.loadingCS);
         swipeRefreshLayout = findViewById(R.id.swipeRefresh);
 
-        chatList = new ArrayList<>();
+        loading.setVisibility(View.VISIBLE);
+        send.setEnabled(false);
+
+        /*chatList = new ArrayList<>();
+        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, chatList); //adapter for chatList
+        chat.setAdapter(adapter);*/
+        chatAdapter = new ChatAdapter(getApplicationContext(), R.id.sendMsg);
+        chat.setAdapter(chatAdapter);
+        chat.setTranscriptMode(AbsListView.TRANSCRIPT_MODE_ALWAYS_SCROLL);
+        chat.setAdapter(chatAdapter);
+        chatAdapter.registerDataSetObserver(new DataSetObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                chat.setSelection(chatAdapter.getCount() - 1);
+            }
+        });
 
         db = FirebaseFirestore.getInstance();
         auth = FirebaseAuth.getInstance();
-
-        adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, chatList); //adapter for chatList
-
-        chat.setAdapter(adapter);
 
         //details of another user in chat
         SharedPreferences sharedPref = getBaseContext().getSharedPreferences("Preference", MODE_PRIVATE);
         String chatUserName = sharedPref.getString("chatUser", "User");
         String chatUserId = sharedPref.getString("chatUserId", null);
-        /*Log.e("ChatId", "chatUserId > " + chatUserId);*/
-
-        @SuppressLint("SimpleDateFormat")
-        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
+        /*Log.e("ChatId", "another user Id and name > " + chatUserId + " " + chatUserId);*/
 
         //name of another chat user
         chatUserNameTV.setText(chatUserName);
 
+        //details of the current user
+        senderName = Objects.requireNonNull(auth.getCurrentUser()).getDisplayName();
+        senderId = Objects.requireNonNull(auth.getCurrentUser()).getUid();
+        /*Log.e("CurrentUser", "Current user name and id: "+ senderName +" "+ senderId);*/
+
         //possible chatId's for storing chat data
-        String senderId = Objects.requireNonNull(auth.getCurrentUser()).getUid();
         String chatId1 = senderId + chatUserId;
         String chatId2 = chatUserId + senderId;
 
         //is there any chatId already existed from these possibilities, if not then chatId2 will be set as chatId
         chatId = checkChatId(chatId1, chatId2);
-        Log.e("chatId", "current Chat Id: "+ chatId);
+        /*Log.e("chatId", "current Chat Id: "+ chatId);*/
 
-        //reference for the chatId document section
-        documentReference = db.collection("ChatData").document(chatId);
-        //changes happens in document. addSnapshotListener, starts listening to the document referenced by above DocumentReference.
-        /*documentReference.collection(chatId).addSnapshotListener(new EventListener<QuerySnapshot>() {
-            @Override
-            public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
-                if( value != null && !value.isEmpty()){
-                    int i = value.getDocumentChanges().size();
-                    Log.e("QuerySnapshot", "data > "+ value.getDocumentChanges().get(--i).getDocument().getString("msg"));
-                    //selecting the last document of the chat
-                    String msg = value.getDocumentChanges().get(i).getDocument().getString("msg");
-                    chatList.add(msg);
-                    adapter.notifyDataSetChanged();
-                   *//* getChatData(chatId);*//*
-                }
-            }
-        });*/
-
-        documentReference.addSnapshotListener(new EventListener<DocumentSnapshot>() {
-            @Override
-            public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
-                assert value != null;
-                if(value.exists()){
-
-                    ArrayList<HashMap<String, String>> users = (ArrayList<HashMap<String, String>>) value.get("Message");
-                    assert users != null;
-                    Log.e("ChatData", "Chat > "+ users.size());
-
-                    for(int i = 0 ; i<users.size(); i++){
-                        HashMap<String, String> chat = users.get(i);
-                        String msg = chat.get("msg");
-                        chatList.add(msg);
-                        adapter.notifyDataSetChanged();
-                    }
-                }
-            }
-        });
+        //snapshot listener, when ever there is changes in the chat
+        chatListener(chatId);
 
         //swipe down to refresh the chatList
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                chatList.clear();
-
+                Log.e("check_Id", "chatId is : "+ chatId);
                 getChatData(chatId);
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
 
+        @SuppressLint("SimpleDateFormat")
+        String timeStamp = new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new java.util.Date());
+        /*Log.e("time", "get time: "+ timeStamp);*/
+
         // send the message
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //store the message to string from EditText field
                 String newMsg = msg.getText().toString();
                 if(!newMsg.isEmpty()){
-                    msgModel model = new msgModel(auth.getCurrentUser().getDisplayName(), newMsg, timeStamp);
-                    //store to the fireStore db,
-                    /*db.collection("ChatData").document(chatId).collection(chatId).document(timeStamp).set(model)
-                            .addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void unused) {
-                            // on success message is added to the chatList, here notifyDataSetChanged() not used as in line-96 there already addSnapshotListener is in use
-                            chatList.add(newMsg);
-                            msg.setText("");
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Log.e("ChatData", "Chat data failed to add > " + e.getMessage());
-                        }
-                    });*/
-
-                    documentReference.update("Message", FieldValue.arrayUnion(model)).addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void unused) {
-                            chatList.add(newMsg);
-                            msg.setText("");
-                            Toast.makeText(ChatScreen.this, "Data added to db", Toast.LENGTH_SHORT).show();
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            checkDocument(model, documentReference);
-                            Toast.makeText(ChatScreen.this, "First msg", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-
+                    msgModel model = new msgModel(senderName, newMsg, timeStamp);
+                    documentReference = db.collection("ChatData").document(chatId);
+                    //store to the fireStore db, document already exists then update the array if not then create new document and set new data
+                    checkDocumentAndAdd(model, documentReference);
                 }
             }
         });
     }
 
-    private void checkDocument(msgModel model, DocumentReference documentReference) {
+    private void chatListener(String chatId) {
+        //reference for the chatId document section
+        documentReference = db.collection("ChatData").document(chatId);
+        //changes happens in document. addSnapshotListener, starts listening to the document referenced by above DocumentReference.
+        documentReference.addSnapshotListener(new EventListener<DocumentSnapshot>() {
+            @Override
+            public void onEvent(@Nullable DocumentSnapshot value, @Nullable FirebaseFirestoreException error) {
+                assert value != null;
+                if(value.exists()){
+                    getChatData(chatId);
+                }
+            }
+        });
+    }
+
+    private void checkDocumentAndAdd(msgModel model, DocumentReference documentReference) {
         documentReference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                 if(task.isSuccessful()){
                     DocumentSnapshot document = task.getResult();
-                    if(!document.exists()){
+                    if(document.exists()){
+                        //if document does exists then update the firebase message array
+                        addMsg(model, documentReference);
+                    } else {
+                        //if document doesn't exists then set the firebase message array
                         onFirstMsg(model, documentReference);
                     }
+                    getChatData(chatId);
                 }
             }
         }).addOnFailureListener(new OnFailureListener() {
@@ -226,39 +197,37 @@ public class ChatScreen extends AppCompatActivity {
         });
     }
 
-    //checks is there any chatId already existed or not if not then chatId2 will be the chatId
-    private String checkChatId(String chatId1, String chatId2){
-        loading.setVisibility(View.VISIBLE);
-        DocumentReference documentReference = db.collection("ChatData").document(chatId1);
-        /*documentReference.collection(chatId1).get().addOnSuccessListener(new OnSuccessListener<QuerySnapshot>() {
+    private void addMsg(msgModel model, DocumentReference documentReference) {
+        documentReference.update("Message", FieldValue.arrayUnion(model)).addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
-            public void onSuccess(QuerySnapshot queryDocumentSnapshots) {
-                loading.setVisibility(View.GONE);
-                if(!queryDocumentSnapshots.isEmpty()){
-                    chatId = chatId1;
-                }
-                chatList.clear();
-                getChatData(chatId);
-                send.setEnabled(true);
+            public void onSuccess(Void unused) {
+                msg.setText("");
+                Toast.makeText(ChatScreen.this, "Data added to db", Toast.LENGTH_SHORT).show();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                loading.setVisibility(View.GONE);
-                Toast.makeText(ChatScreen.this, "Unable to connect", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChatScreen.this, "First msg", Toast.LENGTH_SHORT).show();
             }
-        });*/
+        });
+    }
 
+    //checks is there any chatId already existed or not if not then chatId2 will be the chatId
+    private String checkChatId(String chatId1, String chatId2){
+        loading.setVisibility(View.VISIBLE);
+        DocumentReference documentReference = db.collection("ChatData").document(chatId1);
         documentReference.get().addOnSuccessListener(new OnSuccessListener<DocumentSnapshot>() {
             @Override
             public void onSuccess(DocumentSnapshot documentSnapshot) {
-                loading.setVisibility(View.GONE);
-                if(!documentSnapshot.exists()){
+                if (documentSnapshot.exists()) {
                     chatId = chatId1;
+                } else {
+                    chatId = chatId2;
                 }
-                chatList.clear();
+                chatListener(chatId);
                 getChatData(chatId);
                 send.setEnabled(true);
+                /*Log.e("check_chatId","current chat Id: " + chatId);*/
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -269,6 +238,7 @@ public class ChatScreen extends AppCompatActivity {
         });
         if(chatId == null){
             chatId = chatId2;
+            /*Log.e("check_chatId","current chat Id in if: " + chatId);*/
         }
         return chatId;
     }
@@ -276,41 +246,30 @@ public class ChatScreen extends AppCompatActivity {
     //starts getting the entire chat data with chatId
     private void getChatData(String chatId) {
         DocumentReference documentReference = db.collection("ChatData").document(chatId);
-        /*documentReference.collection(chatId).get().addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
-            @Override
-            public void onComplete(@NonNull Task<QuerySnapshot> task) {
-                if(task.isSuccessful() && !task.getResult().isEmpty()){
-                    for(QueryDocumentSnapshot chat: task.getResult()){
-                        String msg = chat.getString("msg");
-                        String userName = chat.getString("userId");
-                        *//*Log.e("getChat", "OnComplete of getting chat > "+ msg);*//*
-                        chatList.add(userName + "\n" + msg +"\n\n");
-                        adapter.notifyDataSetChanged();
-                    }
-                }
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(ChatScreen.this, "Unable to get Data", Toast.LENGTH_SHORT).show();
-            }
-        });*/
         documentReference.get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
             @Override
             public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                 DocumentSnapshot document = task.getResult();
+                loading.setVisibility(View.GONE);
                 if(document.exists()){
+                    loading.setVisibility(View.VISIBLE);
 
                     ArrayList<HashMap<String, String>> users = (ArrayList<HashMap<String, String>>) document.get("Message");
                     assert users != null;
-                    Log.e("ChatData", "Chat > "+ users.size());
+                    /*Log.e("ChatData", "Chat > "+ users.size());*/
+                    loading.setVisibility(View.GONE);
+                    chatAdapter.clear();
 
                     for(int i = 0 ; i<users.size(); i++){
                         HashMap<String, String> chat = users.get(i);
                         String msg = chat.get("msg");
                         String userName = chat.get("userId");
-                        chatList.add(userName + "\n" + msg +"\n\n");
-                        adapter.notifyDataSetChanged();
+                        String chatMsg = userName + ":\n" + msg +"\n\n";
+                        if(Objects.equals(userName, senderName)){
+                            chatAdapter.add(new ChatMesgDirection(true, chatMsg));
+                        } else {
+                            chatAdapter.add(new ChatMesgDirection(false, chatMsg));
+                        }
                     }
                 }
             }
