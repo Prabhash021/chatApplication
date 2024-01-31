@@ -73,4 +73,6 @@ dependencies {
 
     // For swipe-to-refresh
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.2.0-alpha01")
+
+    implementation("com.mikhaellopez:circularimageview:4.3.1");
 }

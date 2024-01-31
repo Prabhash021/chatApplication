@@ -6,6 +6,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.DataSetObserver;
 import android.icu.text.SimpleDateFormat;
@@ -130,13 +133,23 @@ public class ChatScreen extends AppCompatActivity {
         send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String newMsg = msg.getText().toString();
+                String newMsg = msg.getText().toString().trim();
                 if(!newMsg.isEmpty()){
                     msgModel model = new msgModel(senderName, newMsg, timeStamp);
                     documentReference = db.collection("ChatData").document(chatId);
                     //store to the fireStore db, document already exists then update the array if not then create new document and set new data
                     checkDocumentAndAdd(model, documentReference);
                 }
+            }
+        });
+
+        chatUserNameTV.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clipData = ClipData.newPlainText("userName", chatUserId);
+                clipboard.setPrimaryClip(clipData);
+                return false;
             }
         });
     }

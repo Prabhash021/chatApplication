@@ -6,12 +6,15 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.annotation.SuppressLint;
+import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
@@ -31,6 +34,7 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.util.Calendar;
 import java.util.Objects;
 
 public class EditUserProfile extends AppCompatActivity {
@@ -38,7 +42,7 @@ public class EditUserProfile extends AppCompatActivity {
     String gender;
     Uri imageUri;
     ImageView profileUri;
-    EditText name, email, bio, DOB;
+    EditText name, email, bio, dob;
     RadioButton male, female;
     Button save, uploadImg;
     ProgressBar loading;
@@ -57,7 +61,7 @@ public class EditUserProfile extends AppCompatActivity {
         name = findViewById(R.id.nameEditTxt);
         email = findViewById(R.id.emailEditTxt);
         bio = findViewById(R.id.bioEditTxt);
-        DOB = findViewById(R.id.dateEditTxt);
+        dob = findViewById(R.id.dateEditTxt);
         male = findViewById(R.id.maleRadioBtn);
         female = findViewById(R.id.femaleRadioBtn);
         save = findViewById(R.id.saveBtn);
@@ -83,6 +87,7 @@ public class EditUserProfile extends AppCompatActivity {
                 gender = "Female";
             }
         });
+
         save.setOnClickListener(v -> saveDetails());
 
         ActivityResultLauncher<PickVisualMediaRequest> pickMedia =
@@ -108,13 +113,33 @@ public class EditUserProfile extends AppCompatActivity {
         });
 
         uploadImg.setOnClickListener(v -> uploadImg(imageUri));
+
+        dob.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Calendar calendar = Calendar.getInstance();
+
+                int year = calendar.get(Calendar.YEAR);
+                int month = calendar.get(Calendar.MONTH);
+                int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+                DatePickerDialog datePicker = new DatePickerDialog(EditUserProfile.this, new DatePickerDialog.OnDateSetListener() {
+                    @SuppressLint("SetTextI18n")
+                    @Override
+                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+                        dob.setText(dayOfMonth + "-" + (month +1) + "-" + year);
+                    }
+                }, year, month, day);
+                datePicker.show();
+            }
+        });
     }
 
     private void saveDetails() {
-        String uName = name.getText().toString();
-        String uEmail = email.getText().toString();
-        String uBio = bio.getText().toString();
-        String uDob = DOB.getText().toString();
+        String uName = name.getText().toString().trim();
+        String uEmail = email.getText().toString().trim();
+        String uBio = bio.getText().toString().trim();
+        String uDob = dob.getText().toString().trim();
         String uGender = gender;
         Uri uProfileUri = imageUri;
         String uId = Objects.requireNonNull(auth.getCurrentUser()).getUid();
@@ -205,7 +230,7 @@ public class EditUserProfile extends AppCompatActivity {
                         }else {
                             female.setChecked(true);
                         }
-                        DOB.setText(document.getString("dob"));
+                        dob.setText(document.getString("dob"));
                         imageUri = Uri.parse(document.getString("profileUri"));
                         Glide.with(EditUserProfile.this)
                                 .load(imageUri)

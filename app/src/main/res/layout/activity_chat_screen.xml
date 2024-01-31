@@ -23,40 +23,40 @@
         android:visibility="gone"/>
 
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefresh"
         android:layout_width="match_parent"
-        android:layout_height="775dp"
-        android:id="@+id/swipeRefresh">
+        android:layout_height="760dp">
 
         <ListView
             android:id="@+id/chatLV"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:stackFromBottom="true"
-            android:transcriptMode="alwaysScroll"/>
-
+            android:transcriptMode="alwaysScroll" >
+        </ListView>
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="65dp">
 
         <EditText
+            android:id="@+id/chatMsg"
             android:layout_width="300dp"
             android:layout_height="wrap_content"
-            android:hint="@string/enter_text"
-            android:id="@+id/chatMsg"
             android:layout_alignParentStart="true"
-            android:layout_margin="8dp"/>
+            android:layout_margin="8dp"
+            android:hint="@string/enter_text" />
 
         <Button
+            android:id="@+id/sendMsg"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/send"
-            android:id="@+id/sendMsg"
             android:layout_alignParentEnd="true"
-            android:theme="@style/ButtonColor"
-            android:enabled="false"/>
+            android:enabled="false"
+            android:text="@string/send"
+            android:theme="@style/ButtonColor" />
 
     </RelativeLayout>
 

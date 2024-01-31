@@ -14,4 +14,6 @@
     <string name="enter_text">Enter text</string>
     <string name="send">Send</string>
     <string name="refresh">Refresh</string>
+    <string name="scrolltotop">ScrollToTop</string>
+    <string name="update_profile">Update Profile</string>
 </resources>
